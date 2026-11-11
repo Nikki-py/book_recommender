@@ -81,7 +81,9 @@ class BookApi {
   Future<Object?> _get(String path, [Map<String, String>? query]) async {
     final uri = Uri.parse('$baseUrl$path').replace(queryParameters: query);
     if (_cache.containsKey(uri)) return _cache[uri];
-    final body = await _send(() => _client.get(uri), const Duration(seconds: 12));
+    // The online server sleeps when nobody has used it for a while and takes
+    // up to a minute to wake, so wait long enough for that.
+    final body = await _send(() => _client.get(uri), const Duration(seconds: 60));
     _cache[uri] = body;
     return body;
   }
@@ -91,7 +93,7 @@ class BookApi {
     // Recommendations search many books on the server, so allow them longer.
     return _send(
       () => _client.post(uri, headers: {'Content-Type': 'application/json'}, body: jsonEncode(body)),
-      const Duration(seconds: 25),
+      const Duration(seconds: 90),
     );
   }
 
